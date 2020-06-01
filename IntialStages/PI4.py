@@ -14,13 +14,13 @@ DIV                =   'DIV'
 EOF                =   'EOF'
 LPAREN             =   '('
 RPAREN             =   ')'
-
+# Compartor
 LESS_THAN          =   'LESS_THAN'
 LESS_THAN_EQUAL    =   'LESS_THAN_EQUAL'
 EQUALS             =   'EQUALS'
 GREATER_THAN       =   'GREATER_THAN'
 GREATER_THAN_EQUAL =   'GREATER_THAN_EQUAL'
-
+# KeyWords
 BEGIN              =   '{'
 END                =   '}'
 IF                 =   'IF'
@@ -30,7 +30,8 @@ ELSE               =   'ELSE'
 ELSEIF             =   'ELSEIF'
 FOO                =   'FOO'
 PRINT              =   'PRINT'
-
+FOR                =   'FOR'
+# Random
 SEMI               =   'SEMI'
 DOT                =   'DOT'
 ASSIGN             =   'ASSIGN'
@@ -38,7 +39,7 @@ ID                 =   'ID'
 STR                =   'STR'
 COMMA              =   ','
 
-
+# helper functions
 def is_operator(c):
     return c in ['+','-','*','/','<','>']
 
@@ -53,7 +54,7 @@ def recognise_operator(c):
     }
     return switcher.get(c,'-1');
 
-
+# Token
 class Token(object):
     def __init__(self, type, value):
         self.type = type
@@ -73,16 +74,19 @@ RESERVED_KEYWORDS = {
     'ELSE': Token('ELSE', 'ELSE'),
     'ELSEIF': Token('ELSEIF', 'ELSEIF'),
     'PRINT': Token('PRINT', 'PRINT'),
-
+    'FOR'  : Token('FOR', 'FOR')
 }
 
+# Lexer
 class Lexer(object):
     def __init__(self, text):
         self.text = text
         self.pos = 0
         self.current_char = self.text[self.pos]
-
+    
     def peek(self):
+        # peeks one pos ahead, and returns the charcter there
+        # wihtout actually moving the pos pointer 
         peek_pos = self.pos + 1
         if peek_pos > len(self.text) - 1:
             return None
@@ -90,6 +94,7 @@ class Lexer(object):
             return self.text[peek_pos]
 
     def advance(self):
+        # moves the pos pointer one step ahead
         self.pos += 1
         if self.pos > len(self.text) - 1:
             self.current_char = None
@@ -97,11 +102,12 @@ class Lexer(object):
             self.current_char = self.text[self.pos]
 
     def skip_whitespace(self):
+        # as the name suggests, it skips the white spaces
         while self.current_char is not None and self.current_char.isspace():
             self.advance()
 
     def _id(self):
-        """Handle identifiers and reserved keywords"""
+        """ Handle identifiers and reserved keywords """
         result = ''
         while self.current_char is not None and self.current_char.isalnum():
             result += self.current_char
@@ -112,7 +118,7 @@ class Lexer(object):
 
 
     def integer(self):
-        """Return a (multidigit) integer consumed from the input."""
+        """ Return a (multidigit) integer consumed from the input."""
         result = ''
         while self.current_char is not None and self.current_char.isdigit():
             result += self.current_char
@@ -120,7 +126,7 @@ class Lexer(object):
         return int(result)
 
     def get_str(self):
-        """Return a string from the input"""
+        """ Return a string from the input """
         self.advance()
         result = ''
         while self.current_char is not None and self.current_char is not "\"":
@@ -131,7 +137,7 @@ class Lexer(object):
 
 
     def get_next_token(self):
-        """Lexical analyzer (also known as scanner or tokenizer)
+        """ Lexical analyzer (also known as scanner or tokenizer)
 
         This method is responsible for breaking a sentence
         apart into tokens.
@@ -266,6 +272,14 @@ class Var(AST):
 class NoOp(AST):
     pass
 
+class ForBlock(AST):
+    def __init__(self, token, assign, cond, change, body):
+        self.token = token
+        self.assign = assign
+        self.cond = cond
+        self.change = change
+        self.body = body
+
 class IfBlock(AST):
     def __init__(self, cond, token, if_body, elseif_nodes,else_body):
         self.cond = cond
@@ -294,21 +308,20 @@ class Parser(object):
         # type and if they match then "eat" the current token
         # and assign the next token to the self.current_token,
         # otherwise raise an exception.
-        print(self.current_token.type)
+        print(self.current_token.type, token_type)
         if self.current_token.type == token_type:
             self.current_token = self.lexer.get_next_token()
         else:
             self.error()
 
     def print(self):
-        """ PRINT( ((helo|expr)COMMA)*  )  """
+        """ PRINT( ((str|expr)COMMA)*  )  """
         token = self.current_token
         node = self.empty()
         result = [node]
         self.eat(PRINT)
-        self.eat(BEGIN)
+        self.eat(LPAREN)
         while(self.current_token.type in (STR, ID, PLUS, MINUS,INTEGER, LPAREN)):
-            print("inside: ", self.current_token.value, self.current_token.type)
             if(self.current_token.type == STR):
                 node = self.current_token.value
                 self.eat(STR)
@@ -317,8 +330,7 @@ class Parser(object):
                 node = self.expr()
             result.append(node)
             self.eat(COMMA)
-        print("outside: ", self.current_token.value, self.current_token.type)
-        self.eat(END)
+        self.eat(RPAREN)
 
         return Print(token, result)
 
@@ -393,11 +405,8 @@ class Parser(object):
         """
         compound_statement: BEGIN statement_list END
         """
-        #print(3, self.current_token)
         self.eat(BEGIN)
-        #print(4, self.current_token)
         nodes = self.statement_list()
-        #print(5, self.current_token)
         self.eat(END)
 
         root = Compound()
@@ -408,15 +417,17 @@ class Parser(object):
 
     def statement_list(self):
         """
-        statement_list : (assignment_statement | empty| if_block| print)*
+        statement_list : (assignment_statement | empty| if_block| print | for_block)*
         """
         node=self.empty()
         result=[node]
-        while(self.current_token.type in (ID, IF, PRINT)):
+        while(self.current_token.type in (ID, IF, PRINT, FOR)):
             if self.current_token.type == ID:
                 node = self.assignment_statement()
             elif self.current_token.type == IF:
                 node = self.if_block()
+            elif self.current_token.type == FOR:
+                node = self.for_block()    
             elif self.current_token.type == PRINT:
                 node = self.print()
             result.append(node)
@@ -441,7 +452,6 @@ class Parser(object):
         """
         node = Var(self.current_token)
         self.eat(ID)
-        print("did i come here")
         return node
 
     def elseif_block(self):
@@ -465,7 +475,6 @@ class Parser(object):
                 | ELSE
                     compount_statement
                 | empty
-                  FI
         """
         token = self.current_token
         self.eat(IF)
@@ -473,7 +482,6 @@ class Parser(object):
         if_body = self.compound_statement()
         elseif_nodes=[]
         while (self.current_token.type == ELSEIF):
-            print(1)
             elseif_nodes.append(self.elseif_block())
 
         if(self.current_token.type == ELSE):
@@ -482,10 +490,26 @@ class Parser(object):
         else:
             else_body = self.empty()
 
-        self.eat(FI)
-        print(len(elseif_nodes))
         node= IfBlock(cond, token, if_body, elseif_nodes, else_body)
         return node
+
+    def for_block(self):
+        """
+        for_block: FOR(assignment_statement SEMI cond SEMI change SEMI) 
+            compounf_statement
+        """
+        token = self.current_token
+        self.eat(FOR)
+        self.eat(LPAREN)
+        assig = self.assignment_statement()
+        
+        cond = self.expr()
+        self.eat(SEMI)
+        change = self.assignment_statement()
+        
+        self.eat(RPAREN)
+        body = self.compound_statement()
+        return ForBlock(token,assig,cond,change,body)
 
     def empty(self):
         """
@@ -505,9 +529,10 @@ class Parser(object):
         program : compound_statement
         
         compound_statement: BEGIN statement_list END
-        statement_list : (assignment_statement | empty |if_block)*
+        statement_list : (assignment_statement | empty| if_block| print | for_block)*
         assignment_statement : variable ASSIGN expr SEMI
         empty :
+        PRINT( ((str|expr)COMMA)*  )  
        
         if_block: IF expr 
                     compound_statement
@@ -515,10 +540,13 @@ class Parser(object):
                 | ELSE
                     compount_statement
                 | empty
-                  FI
+
     
         elseif_block: ELSEIF expr 
                         compound_statement 
+    
+        for_block: FOR(assignment_statement; cond; change) 
+            compounf_statement
 
         expr: term ((PLUS | MINUS) term)*
 
@@ -630,6 +658,12 @@ class Interpreter(NodeVisitor):
             self.visit(node.body)
             return 1
 
+    def visit_ForBlock(self, node):
+        self.visit(node.assign)
+        while self.visit(node.cond):
+            self.visit(node.body)
+            self.visit(node.change)
+
     def visit_Print(self, node):
         for n in node.content:
             if(type(n)==str):
@@ -638,7 +672,7 @@ class Interpreter(NodeVisitor):
                 pass
             else:
                 print(self.visit(n),end=" ")
-        print()
+        
 
     def interpret(self):
         tree = self.parser.parse()
@@ -655,15 +689,14 @@ def main():
         #     break
         # if not text:
         #     continue
-        text = """\
+        text = text = """\
                 {
-                    number = 2;
+                    number = 2523*10;
                     x = 11;
                     IF(x<=11){
                         hello=2;
                         hello=hello-2;
                         a=0;
-                        PRINT{"hello bois this ileinalso worked",}
                         IF(a<1){
                             hello=108;
                         }ELSEIF(a<2){
@@ -677,11 +710,12 @@ def main():
                         }ELSE{
                             hello=113;
                         }
-                        FI
-                        PRINT{"hello: ",  hello, "here also", hello+3,}
 
+
+                        FOR(i=2;i<=10;i=i+2;){
+                            PRINT("Hello World!",)
+                        }
                     }
-                    FI
                 }
                  """
 
