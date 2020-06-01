@@ -135,6 +135,10 @@ class Lexer(object):
                 self.advance()
                 return Token(END, '}')
 
+            if self.current_char == '=' and self.peek() == '=':
+                self.advance()
+                self.advance()
+                return Token(EQUALS, '==')
             if self.current_char == '=':
                 self.advance()
                 return Token(ASSIGN, '=')
@@ -149,10 +153,6 @@ class Lexer(object):
                 self.advance()
                 return Token(GREATER_THAN_EQUAL, '>=')
 
-            if self.current_char == '=' and self.peek() == '=':
-                self.advance()
-                self.advance()
-                return Token(EQUALS, '==')
 
             if self.current_char == ';':
                 self.advance()
@@ -267,6 +267,7 @@ class Parser(object):
         # type and if they match then "eat" the current token
         # and assign the next token to the self.current_token,
         # otherwise raise an exception.
+        print(self.current_token.type)
         if self.current_token.type == token_type:
             self.current_token = self.lexer.get_next_token()
         else:
@@ -343,11 +344,11 @@ class Parser(object):
         """
         compound_statement: BEGIN statement_list END
         """
-        print(3, self.current_token)
+        #print(3, self.current_token)
         self.eat(BEGIN)
-        print(4, self.current_token)
+        #print(4, self.current_token)
         nodes = self.statement_list()
-        print(5, self.current_token)
+        #print(5, self.current_token)
         self.eat(END)
 
         root = Compound()
@@ -358,48 +359,29 @@ class Parser(object):
 
     def statement_list(self):
         """
-        statement_list : statement
-                       | statement SEMI statement_list
+        statement_list : (assignment_statement | empty|if_block)*
         """
-        node = self.statement()
-
-        results = [node]
-
-        while self.current_token.type == SEMI:
-            self.eat(SEMI)
-            results.append(self.statement())
-
-        if self.current_token.type == ID:
-            self.error()
-
-        return results
-
-    def statement(self):
-        """
-        statement : compound_statement
-                  | assignment_statement
-                  | if_block
-                  | empty
-        """
-        if self.current_token.type == BEGIN:
-            node = self.compound_statement()
-        elif self.current_token.type == ID:
-            node = self.assignment_statement()
-        elif self.current_token.type == IF:
-            node = self.if_block()
-        else:
-            node = self.empty()
-        return node
+        node=self.empty()
+        result=[node]
+        while(self.current_token.type in (BEGIN, ID, IF)):
+            if self.current_token.type == ID:
+                node = self.assignment_statement()
+            elif self.current_token.type == IF:
+                node = self.if_block()
+            result.append(node)
+        
+        return result
 
     def assignment_statement(self):
         """
-        assignment_statement : variable ASSIGN expr
+        assignment_statement : variable ASSIGN expr SEMI
         """
         left = self.variable()
         token = self.current_token
         self.eat(ASSIGN)
         right = self.expr()
         node = Assign(left, token, right)
+        self.eat(SEMI)
         return node
 
     def variable(self):
@@ -461,34 +443,22 @@ class Parser(object):
 
     def program(self):
         """
-        program : compound_statement DOT
+        program : compound_statement
         """
-
         node = self.compound_statement()
-        self.eat(DOT)
         return node
 
     def parse(self):
         """ 
-        program : compound_statement DOT
-
-        compound_statement : BEGIN statement_list END
-
-        statement_list : statement
-                       | statement SEMI statement_list
-
-        statement : compound_statement
-                  | assignment_statement
-                  | if_block
-                  | empty
-
-        assignment_statement : variable ASSIGN expr
-    
-        empty :
+        program : compound_statement
         
+        compound_statement: BEGIN statement_list END
+        statement_list : (assignment_statement | empty |if_block)*
+        assignment_statement : variable ASSIGN expr SEMI
+        empty :
        
         if_block: IF expr 
-                    compound_statement 
+                    compound_statement
                 | elseif_block
                 | ELSE
                     compount_statement
@@ -626,42 +596,31 @@ def main():
         #     continue
         text = """\
                 {
-                
-                    {
-                        number = 2;
-                        a = --1;
-                        IF (a<1) { 
-                            hello=5  
-                        }
-                        ELSEIF (a<2) {
-                            hello=6 
-                        }
-                        ELSEIF (a<3) {
-                            hello=7  
-                        }
-                        ELSEIF (a<4) { 
-                            hello=8  
-                        }
-                        ELSEIF (a<5) {
-                            hello=9  
-                        }
-                        ELSEIF (a<6) {
-                            hello=10 
-                        }
-                        ELSEIF (a<7) {
-                            hello=11 
-                        }
-                        ELSE { 
-                            hello=12 
-                        }
-                        FI;
-
-                        b = a < a+ 10 * number >= 4;
-                        c = a - - b
-                    };
-                
+                    number = 2;
                     x = 11;
-                }.
+                    IF(x<=11){
+                        hello=2;
+                        hello=hello-2;
+                        a=0;
+
+                        IF(a<1){
+                            hello=108;
+                        }ELSEIF(a<2){
+                            hello=109;
+                        }ELSEIF(a<3){
+                            hello=110;
+                        }ELSEIF(a<4){
+                            hello=111;
+                        }ELSEIF(a<5){
+                            hello=112;
+                        }ELSE{
+                            hello=113;
+                        }
+                        FI
+
+                    }
+                    FI
+                }
                  """
 
         lexer = Lexer(text)
