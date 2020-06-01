@@ -29,12 +29,14 @@ THEN               =   'THEN'
 ELSE               =   'ELSE'
 ELSEIF             =   'ELSEIF'
 FOO                =   'FOO'
+PRINT              =   'PRINT'
 
 SEMI               =   'SEMI'
 DOT                =   'DOT'
 ASSIGN             =   'ASSIGN'
 ID                 =   'ID'
-
+STR                =   'STR'
+COMMA              =   ','
 
 
 def is_operator(c):
@@ -70,6 +72,7 @@ RESERVED_KEYWORDS = {
     'FI': Token('FI', 'FI'),
     'ELSE': Token('ELSE', 'ELSE'),
     'ELSEIF': Token('ELSEIF', 'ELSEIF'),
+    'PRINT': Token('PRINT', 'PRINT'),
 
 }
 
@@ -116,8 +119,20 @@ class Lexer(object):
             self.advance()
         return int(result)
 
+    def get_str(self):
+        """Return a string from the input"""
+        self.advance()
+        result = ''
+        while self.current_char is not None and self.current_char is not "\"":
+            result += self.current_char
+            self.advance()
+        self.advance()
+        return str(result)
+
+
     def get_next_token(self):
         """Lexical analyzer (also known as scanner or tokenizer)
+
         This method is responsible for breaking a sentence
         apart into tokens.
         """
@@ -125,6 +140,13 @@ class Lexer(object):
 
             if self.current_char.isalpha():
                 return self._id()
+
+            if self.current_char == '"':
+                return Token(STR, self.get_str())
+
+            if self.current_char == ',':
+                self.advance()
+                return Token(COMMA,',')
 
             if self.current_char == '{':
                 self.advance()
@@ -138,6 +160,7 @@ class Lexer(object):
                 self.advance()
                 self.advance()
                 return Token(EQUALS, '==')
+
             if self.current_char == '=':
                 self.advance()
                 return Token(ASSIGN, '=')
@@ -196,6 +219,11 @@ class Lexer(object):
 
 class AST(object):
     pass
+
+class Print(AST):
+    def __init__(self, token, content):
+        self.token = token
+        self.content = content 
 
 class BinOp(AST):
     def __init__(self, left, op, right):
@@ -271,6 +299,28 @@ class Parser(object):
             self.current_token = self.lexer.get_next_token()
         else:
             self.error()
+
+    def print(self):
+        """ PRINT( ((helo|expr)COMMA)*  )  """
+        token = self.current_token
+        node = self.empty()
+        result = [node]
+        self.eat(PRINT)
+        self.eat(BEGIN)
+        while(self.current_token.type in (STR, ID, PLUS, MINUS,INTEGER, LPAREN)):
+            print("inside: ", self.current_token.value, self.current_token.type)
+            if(self.current_token.type == STR):
+                node = self.current_token.value
+                self.eat(STR)
+            elif(self.current_token.type in (ID, PLUS, MINUS,INTEGER, LPAREN)):
+                
+                node = self.expr()
+            result.append(node)
+            self.eat(COMMA)
+        print("outside: ", self.current_token.value, self.current_token.type)
+        self.eat(END)
+
+        return Print(token, result)
 
     def factor(self):
         """factor : (PLUS | MINUS) factor | INTEGER | LPAREN expr RPAREN"""
@@ -358,15 +408,17 @@ class Parser(object):
 
     def statement_list(self):
         """
-        statement_list : (assignment_statement | empty|if_block)*
+        statement_list : (assignment_statement | empty| if_block| print)*
         """
         node=self.empty()
         result=[node]
-        while(self.current_token.type in (BEGIN, ID, IF)):
+        while(self.current_token.type in (ID, IF, PRINT)):
             if self.current_token.type == ID:
                 node = self.assignment_statement()
             elif self.current_token.type == IF:
                 node = self.if_block()
+            elif self.current_token.type == PRINT:
+                node = self.print()
             result.append(node)
         
         return result
@@ -389,6 +441,7 @@ class Parser(object):
         """
         node = Var(self.current_token)
         self.eat(ID)
+        print("did i come here")
         return node
 
     def elseif_block(self):
@@ -466,13 +519,17 @@ class Parser(object):
     
         elseif_block: ELSEIF expr 
                         compound_statement 
+
         expr: term ((PLUS | MINUS) term)*
+
         term: factor ((MUL | DIV | LESS_THAN | LESS_THAN_EQUAL | EQUALS | GREATER_THAN | GREATER_THAN_EQUAL) factor)*
+
         factor : PLUS factor
                | MINUS factor
                | INTEGER
                | LPAREN expr RPAREN
                | variable
+
     
         variable: ID 
         """
@@ -569,10 +626,19 @@ class Interpreter(NodeVisitor):
         self.visit(node.else_body)
 
     def visit_ElseIfBlock(self, node):
-        print(node.cond)
         if self.visit(node.cond):
             self.visit(node.body)
             return 1
+
+    def visit_Print(self, node):
+        for n in node.content:
+            if(type(n)==str):
+                print(n,end=" ")
+            elif(type(n)==NoOp):
+                pass
+            else:
+                print(self.visit(n),end=" ")
+        print()
 
     def interpret(self):
         tree = self.parser.parse()
@@ -597,6 +663,7 @@ def main():
                         hello=2;
                         hello=hello-2;
                         a=0;
+                        PRINT{"hello bois this ileinalso worked",}
                         IF(a<1){
                             hello=108;
                         }ELSEIF(a<2){
@@ -611,6 +678,8 @@ def main():
                             hello=113;
                         }
                         FI
+                        PRINT{"hello: ",  hello, "here also", hello+3,}
+
                     }
                     FI
                 }
