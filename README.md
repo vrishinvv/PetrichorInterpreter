@@ -1,5 +1,5 @@
 # Petrichor_Interpreter
-A simple and elegant Programming language, that was created by combining the best of C++ and Python 3. 
+A "NEW", Programming language, that was created by combining the best of C++ and Python 3. 
 Still under development. Features of Petrcihor so far:
 1. Basic statments
 2. Can evaluate complex mathematical expressions
