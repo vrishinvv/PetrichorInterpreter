@@ -1,6 +1,9 @@
 # Petrichor_Interpreter
-A "NEW", Programming language, that was created by combining the best of C++ and Python 3. 
-Still under development. Features of Petrcihor so far:
+A **NEW** Programming language, that was created by combining the best of C++ and Python 3. 
+*Totally built from scratch* wihout using any dependecies or libraries
+Still under development. 
+
+### Features of Petrcihor so far:
 1. Basic statments
 2. Can evaluate complex mathematical expressions
 3. Variable handling is possible
@@ -8,18 +11,19 @@ Still under development. Features of Petrcihor so far:
 5. For-Loop construct has been provided
 6. Supports Methods/Function
 7. Functions can take parameters and also return values
-8. Recursion is possible, as you may have already guessed
-9. No need to worry about making mistakes in code! We have a detailed error description 
-  package built into the tool
-10. Added a sleek Auto indendation feature
+8. **'Recursion is possible'**, as you may have already guessed
+9. No need to worry about making mistakes in code! We have a detailed 
+   **'Error Description Package'** built into the tool
+10. Comes with a sleek **'Auto-Indendation'** feature
 
-Features in future udpates:
+### Features in future udpates:
 1. Expanding numbers to hold more than just an integer
+2. 
 
-Later Updates:
+### Later Updates:
 1. A good clean WebUI, to test petrichor in action
 
-//DrawBacks:
+### DrawBacks:
 1. Error finding tool, is'nt as finished and complete as one we see in modern 
   interpreters, but does a good enough job to impress
 2. Arrays/ classes/ have not yet been implemented
