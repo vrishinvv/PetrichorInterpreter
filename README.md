@@ -9,9 +9,17 @@ Still under development. Features of Petrcihor so far:
 6. Supports Methods/Function
 7. Functions can take parameters and also return values
 8. Recursion is possible, as you may have already guessed
+9. No need to worry about making mistakes in code! We have a detailed error description 
+  package built into the tool
+10. Added a sleek Auto indendation feature
 
 Features in future udpates:
 1. Expanding numbers to hold more than just an integer
 
 Later Updates:
 1. A good clean WebUI, to test petrichor in action
+
+//DrawBacks:
+1. Error finding tool, is'nt as finished and complete as one we see in modern 
+  interpreters, but does a good enough job to impress
+2. Arrays/ classes/ have not yet been implemented
