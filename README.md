@@ -3,22 +3,23 @@ A **NEW** Programming language, that was created by combining the best of C++ an
 *Totally built from scratch* wihout using any dependecies or libraries
 Still under development. 
 
-### Features of Petrcihor so far:
-1. Basic statments
-2. Can evaluate complex mathematical expressions
-3. Variable handling is possible
-4. If-Elseif-Else construct has been provided
-5. For-Loop construct has been provided
-6. Supports Methods/Function
-7. Functions can take parameters and also return values
-8. **'Recursion is possible'**, as you may have already guessed
-9. No need to worry about making mistakes in code! We have a detailed 
-   **'Error Description Package'** built into the tool
-10. Comes with a sleek **'Auto-Indendation'** feature
+### Interpeter can understand:
+- [x] Basic statments
+- [x] Complex mathematical expressions
+- [x] If-Elseif-Else construct
+- [x] For-Loop construct
+- [x] Methods/Function
+- [x] Parameterised Functions
+- [x] Return Values
+
+### Unique Features:
+* **Local NameSpace handling** is inbuilt
+* **'Recursion is possible'**, as you may have already guessed
+* **'Error Description Package'** built into the tool
+* Comes with a sleek **'Auto-Indendation'** feature
 
 ### Features in future udpates:
-1. Expanding numbers to hold more than just an integer
-2. 
+1. Expanding numbers to hold more than just an integer 
 
 ### Later Updates:
 1. A good clean WebUI, to test petrichor in action
