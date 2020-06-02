@@ -244,7 +244,7 @@ class Parser(object):
 
     def print(self):
         """ 
-        PRINT( ((str|expr)COMMA)*  )  
+        PRINT( ((str|expr)COMMA)*  ) 
         """
         token = self.current_token
         node = self.empty()
@@ -262,21 +262,21 @@ class Parser(object):
             self.eat(COMMA)
 
         self.eat(RPAREN)
+        
 
         return Print(token, result)
 
     def ret(self):
         """
-        RETURN exp|empty SEMI
+        RETURN exp|empty 
         """
         token=self.current_token
         self.eat(RETURN)
         if(self.current_token.type in (ID,PLUS,MINUS,INTEGER,LPAREN,CALL)):
             node = self.expr()
-            self.eat(SEMI)
             return Return(token,node)
 
-        self.eat(SEMI)
+        
         node = NoOp()
         return Return(token,node)
 
@@ -378,16 +378,22 @@ class Parser(object):
         while(self.current_token.type in (ID, IF, PRINT, FOR, CALL, RETURN)):
             if self.current_token.type == ID:
                 node = self.assignment_statement()
+                self.eat(SEMI)
             elif self.current_token.type == IF:
                 node = self.if_block()
+
             elif self.current_token.type == FOR:
                 node = self.for_block()    
+
             elif self.current_token.type == PRINT:
                 node = self.print()
+                self.eat(SEMI)
             elif self.current_token.type == CALL:
                 node = self.call()
+                self.eat(SEMI)
             elif self.current_token.type == RETURN:
                 node = self.ret()
+                self.eat(SEMI)
                 
             result.append(node)
         
@@ -395,14 +401,13 @@ class Parser(object):
 
     def assignment_statement(self):
         """
-        assignment_statement : variable ASSIGN expr SEMI
+        assignment_statement : variable ASSIGN expr
         """
         left = self.variable()
         token = self.current_token
         self.eat(ASSIGN)
         right = self.expr()
         node = Assign(left, token, right)
-        self.eat(SEMI)
         return node
 
     def variable(self):
@@ -454,18 +459,18 @@ class Parser(object):
 
     def for_block(self):
         """
-        for_block: FOR(assignment_statement SEMI cond SEMI change SEMI) 
-            compounf_statement
+            for_block: FOR(assignment_statement COMMA cond COMMA change COMMA) 
+                            compounf_statement
         """
         token = self.current_token
         self.eat(FOR)
         self.eat(LPAREN)
         assig = self.assignment_statement()
-        
+        self.eat(COMMA)
         cond = self.expr()
-        self.eat(SEMI)
+        self.eat(COMMA)
         change = self.assignment_statement()
-        
+        self.eat(COMMA)
         self.eat(RPAREN)
         body = self.compound_statement()
         return ForBlock(token,assig,cond,change,body)
