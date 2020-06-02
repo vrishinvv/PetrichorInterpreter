@@ -2,7 +2,8 @@
 
 A **NEW** Programming language, that was created by combining the best of C++ and Python 3. 
 *Totally built from scratch* wihout using any dependecies or libraries
-Still under development. 
+
+~Still under development. 
 
 ### Interpeter can understand:
 - [x] Basic statments
@@ -21,9 +22,10 @@ Still under development.
 
 ### Features in future udpates:
 1. Expanding numbers to hold more than just an integer 
+2. Key Words will be allowed to be given in small-letter as well
 
 ### Later Updates:
-1. A good clean WebUI, to test petrichor in action
+1. A good clean WebUI, to test Petrichor in action
 
 ### DrawBacks:
 1. Error finding tool, is'nt as finished and complete as one we see in modern 
@@ -131,4 +133,4 @@ I might update syntax of language in future versions
 * Variables declared within a 'compound_statement' are local to that compound_statement
 * redeclaring / aka reinitialising a variable inside a compound_statement(CS) will be considered as updation ONLY
 * As of now, string objects cannot be assigned to variables, they take up ONLY integers
-
+* There must be a "MAIN" function, Yes in caps, in your program
