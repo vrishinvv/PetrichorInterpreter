@@ -6,12 +6,12 @@ Still under development. Features of Petrcihor so far:
 3. Variable handling is possible
 4. If-Elseif-Else construct has been provided
 5. For-Loop construct has been provided
+6. Supports Methods/Function
+7. Functions can take parameters and also return values
+8. Recursion is possible, as you may have already guessed
 
 Features in future udpates:
-1. Addition of Methods/Function
-2. Expanding numbers to hold more than just an integer
-3. Local variable name-space handling
-4. Clean recursion implementation
+1. Expanding numbers to hold more than just an integer
 
 Later Updates:
 1. A good clean WebUI, to test petrichor in action
