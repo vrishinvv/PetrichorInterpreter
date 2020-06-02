@@ -7,9 +7,10 @@
 from Helper import * 
 # Token
 class Token(object):
-    def __init__(self, type, value):
+    def __init__(self, type, value,line=0):
         self.type = type
         self.value = value
+        self.line = line
 
     def __str__(self):
         return 'Token({type}, {value})'.format(
@@ -36,8 +37,18 @@ class Lexer(object):
     def __init__(self, text):
         self.text = text
         self.pos = 0
+        self.line = 0
+        self.col = 0
         self.current_char = self.text[self.pos]
+        self.err = Error() 
     
+    def error(self):
+        self.err.res.append(' Invalid Token Used -- COMPILE TIME ERROR'
+                        +'\n      Wrong char: '+self.current_char
+                        +'\n      At line:    '+str(self.line)
+                        +'\n      At char:    '+self.text[self.pos]
+                        )
+        self.advance()
     def peek(self):
         # peeks one pos ahead, and returns the charcter there
         # wihtout actually moving the pos pointer 
@@ -50,6 +61,7 @@ class Lexer(object):
     def advance(self):
         # moves the pos pointer one step ahead
         self.pos += 1
+        self.col += 1
         if self.pos > len(self.text) - 1:
             self.current_char = None
         else:
@@ -67,7 +79,8 @@ class Lexer(object):
             result += self.current_char
             self.advance()
 
-        token = RESERVED_KEYWORDS.get(result, Token(ID, result))
+        token = RESERVED_KEYWORDS.get(result, Token(ID, result,self.line))
+        token.line = self.line
         return token
 
 
@@ -102,70 +115,74 @@ class Lexer(object):
                 return self._id()
 
             if self.current_char == '"':
-                return Token(STR, self.get_str())
+                return Token(STR, self.get_str(),self.line)
+
+            if self.current_char == '\n':
+                self.advance()
+                self.line+=1
+                self.col=self.line
+                continue
 
             if self.current_char == ',':
                 self.advance()
-                return Token(COMMA,',')
+                return Token(COMMA,',',self.line)
 
             if self.current_char == '{':
                 self.advance()
-                return Token(BEGIN, '{')
+                return Token(BEGIN, '{',self.line)
 
             if self.current_char == '}':
                 self.advance()
-                return Token(END, '}')
+                return Token(END, '}',self.line)
 
             if self.current_char == '=' and self.peek() == '=':
                 self.advance()
                 self.advance()
-                return Token(EQUALS, '==')
+                return Token(EQUALS, '==',self.line)
 
             if self.current_char == '=':
                 self.advance()
-                return Token(ASSIGN, '=')
+                return Token(ASSIGN, '=',self.line)
 
             if self.current_char == '<' and self.peek() == '=':
                 self.advance()
                 self.advance()
-                return Token(LESS_THAN_EQUAL, '<=')
+                return Token(LESS_THAN_EQUAL, '<=',self.line)
 
             if self.current_char == '>' and self.peek() == '=':
                 self.advance()
                 self.advance()
-                return Token(GREATER_THAN_EQUAL, '>=')
-
+                return Token(GREATER_THAN_EQUAL, '>=',self.line)
 
             if self.current_char == ';':
                 self.advance()
-                return Token(SEMI, ';')
+                return Token(SEMI, ';',self.line)
 
             if self.current_char == '.':
                 self.advance()
-                return Token(DOT, '.')
+                return Token(DOT, '.',self.line)
             
             if self.current_char.isspace():
                 self.skip_whitespace()
                 continue
 
             if self.current_char.isdigit():
-                return Token(INTEGER, self.integer())
+                return Token(INTEGER, self.integer(),self.line)
 
             if is_operator(self.current_char):
-                t = Token(recognise_operator(self.current_char),self.current_char)
+                t = Token(recognise_operator(self.current_char),self.current_char,self.line)
                 self.advance()
                 return t
 
             if self.current_char == '(':
                 self.advance()
-                return Token(LPAREN, '(')
+                return Token(LPAREN, '(',self.line)
 
             if self.current_char == ')':
                 self.advance()
-                return Token(RPAREN, ')')
-
+                return Token(RPAREN, ')',self.line)
 
             self.error()
 
-        return Token(EOF, None)
+        return Token(EOF, None,self.line)
 

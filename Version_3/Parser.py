@@ -155,27 +155,38 @@ class Parser(object):
         # set current token to the first token taken from the input
         self.current_token = self.lexer.get_next_token()
 
-    def error(self):
-        raise Exception('Error parsing input')
+    def error(self, expected, recieved):
+        
+        self.lexer.err.res.append(' Invalid Syntax Error -- COMPILE TIME ERROR'
+                        +'\n      Expected: '+expected
+                        +'\n      Recieved: '+recieved
+                        +'\n      At line:  '+str(self.lexer.line)
+                        +'\n      Wrong char:  '+str(self.current_token.value)
+                        )
+        
+        
 
     def eat(self, token_type):
         # compare the current token type with the passed token
         # type and if they match then "eat" the current token
         # and assign the next token to the self.current_token,
         # otherwise raise an exception.
-        # print(self.current_token.type, token_type)
+        
         if self.current_token.type == token_type:
             self.current_token = self.lexer.get_next_token()
         else:
-            self.error()
+            self.error(token_type,self.current_token.type)
+            #self.current_token = self.lexer.get_next_token()
+            self.eat(self.current_token.type)
+            return
 
     def param(self, expected):
         """
         param: empty|(expr COMMA)*
         """
         # to tell me, if the param list is only variables, or only values
-        # if function recieved paramter 1- then im execting variables,
-        # else im expecting values
+        # if function recieved paramter 1 - then im execting strictly variables,
+        # else I am expecting expressions
         ok1 = ok2 = 0;
         token=self.current_token
         #node = self.empty();
@@ -191,7 +202,7 @@ class Parser(object):
             result.append(node)
             self.eat(COMMA)
 
-        if(ok1+ok2 ==2):
+        if(ok1+ok2 == 2):
             raise Exception('You have mix matched the paramter types allowed')
         elif(ok1+ok2==0):
             return result
@@ -274,7 +285,6 @@ class Parser(object):
         factor : (PLUS | MINUS) factor | INTEGER | LPAREN expr RPAREN | call
 
         """
-
         token = self.current_token
         if token.type == PLUS:
             self.eat(PLUS)
@@ -353,7 +363,6 @@ class Parser(object):
         self.eat(BEGIN)
         nodes = self.statement_list()
         self.eat(END)
-
         root = Compound()
         for node in nodes:
             root.children.append(node)
@@ -467,8 +476,6 @@ class Parser(object):
         """
         return NoOp()
 
-
-
     def program(self):
         """
         program: FUNC*
@@ -481,9 +488,8 @@ class Parser(object):
         return result
 
     def parse(self):
-
         node = self.program()
         if self.current_token.type != EOF:
-            self.error()
+            self.error(EOF,self.current_token.type)
 
         return node

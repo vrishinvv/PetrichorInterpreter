@@ -19,17 +19,16 @@ def main():
                         }
                         PRINT("\n",)
                     }
-                    
                 }
 
                 FUNC recur(n,){
-                    IF(n==1){RETURN 1;}
+                    IF(n==1){RETURN 1;}\n
                     RETURN n+CALL recur(n-1,);
+                    as=;
                 }
 
 
                 FUNC MAIN(){
-                    CALL TEST(8,9,-9,)
                     b=6;
                     FOR(i=1;i<=b;i=i+1;){
                         PRINT(i,": ",CALL recur(i,),"\n",)

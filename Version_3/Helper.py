@@ -13,3 +13,8 @@ def recognise_operator(c):
         '>':  GREATER_THAN
     }
     return switcher.get(c,'-1');
+
+
+class Error:
+    def __init__(self):
+        self.res=[]

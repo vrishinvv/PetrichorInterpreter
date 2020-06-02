@@ -5,19 +5,29 @@
 #                                                                             #
 ###############################################################################
 from Parser import *
-
+import io
+import sys
+old_stdout = sys.stdout
+new_stdout = io.StringIO()
+sys.stdout = new_stdout
 
 class NodeVisitor(object):
     gf = 0
     ans = 0
     def visit(self, node, ret=[]):
-        #print("-------------------->>>",self.gf)
-        #print(type(node).__name__)
-        if(self.gf==1 and type(node).__name__ != "Compound"): return self.ans
+        if(self.gf==1 and type(node).__name__ != "Compound"):
+            # If the type was Compound, we want to enter it, so that we can erase the local variables 
+            return self.ans
+        
         method_name = 'visit_' + type(node).__name__
         visitor = getattr(self, method_name, self.generic_visit)
-        if(type(node).__name__ == "Compound"): return visitor(node,ret)
-        else: return visitor(node)
+        
+        if(type(node).__name__ == "Compound"): 
+            # we want to make the compound statement declare the variables 
+            # after its '{' brackets is called, to make the paramteres local to the function
+            return visitor(node,ret)
+        else: 
+            return visitor(node)
 
     def generic_visit(self, node):
         raise Exception('No visit_{} method'.format(type(node).__name__))
@@ -31,6 +41,7 @@ class Interpreter(NodeVisitor):
 
     def __init__(self, parser):
         self.parser = parser
+        res=""
 
     def visit_BinOp(self, node):
         if node.op.type == PLUS:
@@ -51,6 +62,8 @@ class Interpreter(NodeVisitor):
             return self.visit(node.left) > self.visit(node.right)
         elif node.op.type == GREATER_THAN_EQUAL:
             return self.visit(node.left) >= self.visit(node.right)
+        else:
+            raise Exception('Invalid operator')
 
     def visit_Num(self, node):
         return node.value
@@ -96,7 +109,11 @@ class Interpreter(NodeVisitor):
         var_name = node.left.value
         val = self.visit(node.right)
         if(var_name in self.GLOBAL_FUNC_NAMES):
-            raise Exception('There is a function with the same name')
+            self.parser.lexer.err.res.append(' Invalid Function Naming -- COMPILE TIME ERROR'
+                                            +'\n      There is a function with the same name'
+                                            +'\n      At line:    '+str(node.left.token.line)
+                                            +'\n      Wrong char: '+node.left.token.value
+                                            )
         else:
             self.GLOBAL_SCOPE[var_name] = val
             see=[]
@@ -105,13 +122,13 @@ class Interpreter(NodeVisitor):
                 see.append(t[-1])
                 t.pop()
             t.pop()
-            #print("SEE",see)
 
             if(var_name not in see): 
                 self.l.append(var_name)
-                if(var_name in self.freq): self.freq[var_name]+=1
-
-                else: self.freq[var_name] = 1
+                if(var_name in self.freq): 
+                    self.freq[var_name]+=1
+                else: 
+                    self.freq[var_name] = 1
     
     def visit_Var(self, node):
         var_name = node.value
@@ -184,5 +201,22 @@ class Interpreter(NodeVisitor):
             self.GLOBAL_FUNC_NAMES[n.name]=n;
 
         self.l.append('{')
-        self.GLOBAL_FUNC_NAMES["MAIN"].val_param.append(NoOp())
-        self.visit(self.GLOBAL_FUNC_NAMES["MAIN"])
+        if("MAIN" not in self.GLOBAL_FUNC_NAMES):
+            self.parser.lexer.err.res.append(' Invalid Function Naming -- COMPILE TIME ERROR\n'
+                +'      Main Function does not exist') 
+        else:
+            self.GLOBAL_FUNC_NAMES["MAIN"].val_param.append(NoOp())
+            self.visit(self.GLOBAL_FUNC_NAMES["MAIN"])
+            self.res=new_stdout.getvalue()
+
+        sys.stdout = old_stdout
+        errObj=self.parser.lexer.err
+        if(len(errObj.res)==0):
+            print(self.res)
+            print('-- Compiled SUCCESSFULLY with 0 errors!!!')
+        else:
+            print('-- Compiled UN-SUCCESSFULLY with '+str(len(errObj.res))+' error(s)!!!')
+            for i in range(len(errObj.res)):
+                print(i+1,": ")
+                print(errObj.res[i])
+            print()
