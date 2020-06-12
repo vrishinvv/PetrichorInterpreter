@@ -1,7 +1,7 @@
 # Petrichor_Interpreter
 
 A **NEW** Programming language, that was created by combining the best of C++ and Python 3. 
-*Totally built from scratch* wihout using any dependecies or libraries
+*Totally built from scratch* wihout using any dependecies or libraries. You can check it out in action here: https://repl.it/@vrishinvv/Petrichor-Programming-language#main.py
 
 ~Still under development. 
 
