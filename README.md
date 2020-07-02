@@ -24,8 +24,6 @@ A **NEW** Programming language, that was created by combining the best of C++ an
 1. Expanding numbers to hold more than just an integer 
 2. Key Words will be allowed to be given in small-letter as well
 
-### Later Updates:
-1. A good clean WebUI, to test Petrichor in action
 
 ### DrawBacks:
 1. Error finding tool, is'nt as finished and complete as one we see in modern 
